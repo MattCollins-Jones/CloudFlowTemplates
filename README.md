@@ -8,7 +8,7 @@ This respository contains a flow templates that can be donwloaded and installed 
 
 
 <ins>Installation Instructions</ins>
-1. Download Zip file
+1. Download Zip file from the [Repository](https://github.com/MattCollins-Jones/CloudFlowTemplates/releases/tag/Outlook).
 2. Open Power Automate
 3. Choose Import
 4. Follow instructions for importing Wizard
