@@ -5,6 +5,7 @@ This respository contains a flow templates that can be donwloaded and installed 
 
 <ins>List</ins>
 1. Outlook - Check if meeting clashes with Lunch
+2. Button - Create Temp Meeting
 
 
 <ins>Installation Instructions</ins>
