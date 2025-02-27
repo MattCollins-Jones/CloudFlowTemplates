@@ -1,0 +1,381 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps_1": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "mcj_sharedcommondataserviceforapps_5f3af"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_an_action_is_performed": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "parameters": {
+              "catalog": "commoncatalog",
+              "category": "powerplatformpipelines",
+              "subscriptionRequest/entityname": "none",
+              "subscriptionRequest/sdkmessagename": "OnApprovalStarted",
+              "subscriptionRequest/name": "709e05d7-f1c6-ef11-a72f-6045bdc1b517"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "BusinessEventsTrigger",
+              "connectionName": "shared_commondataserviceforapps_1"
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "b398e595-5032-4756-8fc9-fa2d7c6d832a"
+          }
+        }
+      },
+      "actions": {
+        "Get_Deployment_run": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "deploymentstageruns",
+              "recordId": "@triggerOutputs()?['body/InputParameters/StageRunId']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps_1"
+            }
+          },
+          "runAfter": {}
+        },
+        "Do_until_-_Check_when_Solution_files_exported": {
+          "type": "Until",
+          "expression": "@equals(empty(outputs('Get_Deployment_artifacts')?['body/artifactfileunmanaged']),false)",
+          "limit": {
+            "count": 60,
+            "timeout": "PT1H"
+          },
+          "actions": {
+            "Get_Deployment_artifacts": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "deploymentartifacts",
+                  "recordId": "@outputs('Get_Deployment_run')?['body/_artifactid_value']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "GetItem",
+                  "connectionName": "shared_commondataserviceforapps_1"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "2477377f-bfdd-41f3-9355-f2b680e9885b"
+              }
+            },
+            "Delay_1_Minute": {
+              "type": "Wait",
+              "inputs": {
+                "interval": {
+                  "count": 1,
+                  "unit": "Minute"
+                }
+              },
+              "runAfter": {
+                "Get_Deployment_artifacts": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "d31c5f53-2b92-4b6f-a387-e7942cc8cfc9"
+              }
+            }
+          },
+          "runAfter": {
+            "Get_Deployment_run": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "77005a8f-bf08-4dfe-9a21-58751a5705e6"
+          }
+        },
+        "Check_Deployment_Settings_contains_data": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@empty(outputs('Get_Deployment_run')?['body/deploymentsettingsjson'])",
+                  "@true"
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Unbound_Action_-_Approve_Deployment_No_Change": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "actionName": "UpdateApprovalStatus",
+                  "item/ApprovalStatus": 20,
+                  "item/ApprovalComments": "Approve by PA sol",
+                  "item/StageRunId": "@triggerOutputs()?['body/InputParameters/StageRunId']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "PerformUnboundAction",
+                  "connectionName": "shared_commondataserviceforapps_1"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "b191dcb5-18b7-4261-970a-c83958e7b896"
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "ArrayOfNewConnections": {
+                "type": "Compose",
+                "description": "Use this to store your target connections. This can be an environment variable.",
+                "inputs": {
+                  "EnvironmentVariables": [],
+                  "ConnectionReferences": [
+                    {
+                      "LogicalName": "dsfsdf",
+                      "ConnectionId": "46f5fa76d687446e9b1f09054b5ca64d",
+                      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_office365"
+                    },
+                    {
+                      "LogicalName": "gsgdsgd",
+                      "ConnectionId": "shared-sharepointonl-c8834839-c9bf-4a25-838a-82508edd0f10",
+                      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                    }
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "20a7ff96-3ac8-4605-abcd-48ea973bf764"
+                }
+              },
+              "Parse_JSON_NewConnections": {
+                "type": "ParseJson",
+                "description": "This is used to get items from the previous step.",
+                "inputs": {
+                  "content": "@outputs('ArrayOfNewConnections')",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "EnvironmentVariables": {
+                        "type": "array"
+                      },
+                      "ConnectionReferences": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "LogicalName": {
+                              "type": "string"
+                            },
+                            "ConnectionId": {
+                              "type": "string"
+                            },
+                            "ConnectorId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "LogicalName",
+                            "ConnectionId",
+                            "ConnectorId"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "runAfter": {
+                  "ArrayOfNewConnections": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "73d390e8-2d89-45eb-be55-50dd1c0fac2e"
+                }
+              },
+              "Parse_JSON_Deploying_Conns": {
+                "type": "ParseJson",
+                "description": "Parse the JSON of the deployment settings JSON to work with the items.",
+                "inputs": {
+                  "content": "@body('Get_Deployment_run')?['deploymentsettingsjson']",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "EnvironmentVariables": {
+                        "type": "array"
+                      },
+                      "ConnectionReferences": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "LogicalName": {
+                              "type": "string"
+                            },
+                            "ConnectionId": {
+                              "type": "string"
+                            },
+                            "ConnectorId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "LogicalName",
+                            "ConnectionId",
+                            "ConnectorId"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "runAfter": {
+                  "Parse_JSON_NewConnections": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "2f41fe2a-c56f-4180-974c-0ef4777e36e8"
+                }
+              },
+              "Loop_to_combine_array": {
+                "type": "Foreach",
+                "foreach": "@body('Parse_JSON_Deploying_Conns')?['ConnectionReferences']",
+                "actions": {
+                  "Filter_Array_of_Connectors": {
+                    "type": "Query",
+                    "inputs": {
+                      "from": "@body('Parse_JSON_NewConnections')?['ConnectionReferences']",
+                      "where": "@equals(item()['ConnectorId'],items('Loop_to_combine_array')?['ConnectorId'])"
+                    },
+                    "metadata": {
+                      "operationMetadataId": "d52c2dd3-d7d0-4a1a-ba08-fec9c47c0e02"
+                    }
+                  },
+                  "Combine_array": {
+                    "type": "Compose",
+                    "inputs": {
+                      "LogicalName": "@items('Loop_to_combine_array')['LogicalName']",
+                      "ConnectionId": "@first(body('Filter_Array_of_Connectors'))?['ConnectionId']",
+                      "ConnectorId": "@first(body('Filter_Array_of_Connectors'))?['ConnectorId']"
+                    },
+                    "runAfter": {
+                      "Filter_Array_of_Connectors": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "bce3b721-7908-4abd-9ba9-0be533167c6d"
+                    }
+                  }
+                },
+                "runAfter": {
+                  "Parse_JSON_Deploying_Conns": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "4b2943e3-7c61-4321-a6cf-ebfae8c78eb9"
+                }
+              },
+              "Constructed_Deployment_Setting_JSON": {
+                "type": "Compose",
+                "inputs": {
+                  "EnvironmentVariables": "@ body('Parse_JSON_Deploying_Conns')?['EnvironmentVariables']",
+                  "ConnectionReferences": "@outputs('Combine_array')"
+                },
+                "runAfter": {
+                  "Loop_to_combine_array": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "671ecf7d-4131-45c3-a89d-9ddbd50ff45d"
+                }
+              },
+              "Update_Deployment_Stage_Run_-_New_Connection_IDs": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "entityName": "deploymentstageruns",
+                    "recordId": "@outputs('Get_Deployment_run')?['body/deploymentstagerunid']",
+                    "item/deploymentsettingsjson": "@outputs('Constructed_Deployment_Setting_JSON')"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "UpdateRecord",
+                    "connectionName": "shared_commondataserviceforapps_1"
+                  }
+                },
+                "runAfter": {
+                  "Constructed_Deployment_Setting_JSON": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "bc63b5ff-db88-4df3-96ce-d631929b7cb2"
+                }
+              },
+              "Perform_an_unbound_action_-_Approve_Deployment": {
+                "type": "OpenApiConnection",
+                "description": "Update the connection of this step to be the stage owner and owner of the connections in the target environment.",
+                "inputs": {
+                  "parameters": {
+                    "actionName": "UpdateApprovalStatus",
+                    "item/ApprovalStatus": 20,
+                    "item/ApprovalComments": "Approve by PA SA",
+                    "item/StageRunId": "@triggerOutputs()?['body/InputParameters/StageRunId']"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "PerformUnboundAction",
+                    "connectionName": "shared_commondataserviceforapps_1"
+                  }
+                },
+                "runAfter": {
+                  "Update_Deployment_Stage_Run_-_New_Connection_IDs": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "b191dcb5-18b7-4261-970a-c83958e7b896"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Do_until_-_Check_when_Solution_files_exported": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
