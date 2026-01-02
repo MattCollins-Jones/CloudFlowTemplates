@@ -1,7 +1,7 @@
 # CloudFlowTemplates
 List of Templates for Cloud Flows
 
-This respository contains a flow templates that can be donwloaded and installed in your environments.
+​This repository contains a flow templates that can be downloaded and installed in your environments.
 
 <ins>List</ins>
 1. Outlook - Check if meeting clashes with Lunch
